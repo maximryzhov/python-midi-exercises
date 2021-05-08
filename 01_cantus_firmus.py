@@ -61,7 +61,8 @@ class CantusFirmus:
     def _choose_interval(self, current_note_index):
         # If two previous intervals are a P4 or larger
         # choose from M2/m2 or M3/m3 (Rule 12:  no more than two leaps in a row)
-        if current_note_index > 1 and abs(self._intervals[current_note_index-1]) > 2:
+        if current_note_index > 1 and abs(self._intervals[current_note_index-1]) > 2\
+        and abs(self._intervals[current_note_index-2]) > 2:
             intervals = (1, 2)
 
         # Chose from M2/m2, M3/m3 and P4 intervals (Rule 5 and 9)
