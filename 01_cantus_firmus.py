@@ -46,23 +46,22 @@ class CantusFirmus:
         self._scale: tuple[int] = None
         self._degrees: list = []
 
-        self._prev_interval = 0
-        self._prev_direction = 0
+        self._intervals = []
         self._directions = []
         self._cycles = 0
 
-    def _choose_direction(self):
+    def _choose_direction(self, current_note_index):
         # If the previous interval is a fourth or larger,
         # go in the opposite direction (Rule 11)
-        if abs(self._prev_interval) > 2:
-            return self._prev_direction * -1
+        if current_note_index > 1 and abs(self._intervals[current_note_index-1]) > 2:
+            return self._directions[current_note_index-1] * -1
         else:
             return random.choice((1, -1))
 
-    def _choose_interval(self):
-        # If the previous interval is a P4 or larger
-        # choose from M2/m2 or M3/m3 (Rule 12)
-        if abs(self._prev_interval) > 2:
+    def _choose_interval(self, current_note_index):
+        # If two previous intervals are a P4 or larger
+        # choose from M2/m2 or M3/m3 (Rule 12:  no more than two leaps in a row)
+        if current_note_index > 1 and abs(self._intervals[current_note_index-1]) > 2:
             intervals = (1, 2)
 
         # Chose from M2/m2, M3/m3 and P4 intervals (Rule 5 and 9)
@@ -70,17 +69,17 @@ class CantusFirmus:
             intervals = (1, 2, 3)
         return random.choice(intervals)
 
-    def _make_next_note(self, previous_note):
-        interval = self._choose_interval()
-        direction = self._choose_direction()
+    def _make_next_note(self, current_note_index):
+        interval = self._choose_interval(current_note_index)
+        direction = self._choose_direction(current_note_index)
         interval *= direction
 
+        previous_note = self._degrees[current_note_index-1]
         note = previous_note + interval
         self._degrees.append(note)
 
         # Store interval and direction for the next iteration
-        self._prev_direction = direction
-        self._prev_interval = interval
+        self._intervals.append(interval)
         self._directions.append(direction)
 
         return note
@@ -215,18 +214,15 @@ class CantusFirmus:
                 )
 
             # Sequence should start with the tonic (Rule 3)
-            self._degrees = [
-                0,
-            ]
+            self._degrees = [0,]
             # Reset variables
-            self._prev_interval = 0
-            self._prev_direction = 0
-            self._directions = []
+            self._intervals = [0, ]
+            self._directions = [0, ]
 
             current_note = 0
 
             for i in range(1, self._length):
-                current_note = self._make_next_note(current_note)
+                current_note = self._make_next_note(i)
             success = self._check_rules()
             self._cycles += 1
 
